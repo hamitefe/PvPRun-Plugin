@@ -1,0 +1,26 @@
+name: TNTRun
+version: '${project.version}'
+main: me.abdulhamit.tntrun.TNTRun
+api-version: '1.20'
+commands:
+  startmanually:
+    permission: tntrun.start.manually
+    usage: /startmanually
+    permission-message: §4You do not have permission to execute this command!
+    description: starts the tnt run manually
+    aliases: [startm]
+  width:
+    permission: §4You don't have the permission to execute this command!
+    usage: /width
+    permission-message: tntrun.setwidth
+    description: sets the width of the map!
+    aliases: [setwidth]
+  discord:
+    usage: /discord
+    description: get the discord adress
+    aliases: [dc]
+  tntrain:
+    usage: /tntrain
+    permission: tntrun.tntrain
+    permission-message: §4You dont have permission to execute this commands
+    description: make tnt rain
