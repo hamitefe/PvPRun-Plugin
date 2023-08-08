@@ -2,28 +2,33 @@ package me.abdulhamit.tntrun.abilities;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.data.type.TNT;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Creeper;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.metadata.MetadataValue;
 import org.bukkit.util.Vector;
 
-public class ThrowTnt extends Ability{
+public class ThrowCreeper extends Ability{
     @Override
     public Component getName() {
-        return Component.text("TnT").color(NamedTextColor.DARK_RED);
+        return Component.text("Creeper").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD, TextDecoration.ITALIC);
     }
     
+
     
     @Override
     public ItemStack getItem() {
-        ItemStack it = new ItemStack(Material.TNT);
+        ItemStack it = new ItemStack(Material.CREEPER_SPAWN_EGG);
         ItemMeta meta = it.getItemMeta();
-        meta.displayName(getName());
+        
+        meta.displayName(Component.text("Shoot creeper").color(NamedTextColor.GREEN));
+        
+        
         
         it.setItemMeta(meta);
         return it;
@@ -34,9 +39,8 @@ public class ThrowTnt extends Ability{
         final Location loc = p.getEyeLocation();
         final Vector dir = loc.getDirection();
         
-        final TNTPrimed ent = (TNTPrimed) loc.getWorld().spawnEntity(loc, EntityType.PRIMED_TNT);
-        ent.setFuseTicks(40);
-        ent.getYield();
+        final Creeper ent = loc.getWorld().spawn(loc, Creeper.class);
+        ent.ignite();
         ent.setVelocity(dir.multiply(1.5));
     }
 }

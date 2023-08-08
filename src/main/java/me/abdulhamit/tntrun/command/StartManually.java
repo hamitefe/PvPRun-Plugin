@@ -13,7 +13,7 @@ public class StartManually implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
         if (!Game.isStarting()){
             if (Game.current()!=null) {
-                Game.current().stop();
+                Game.current().stop(true);
             }
             Game.startNew();
             commandSender.sendMessage(Component.text("Game is starting!").color(NamedTextColor.GREEN));

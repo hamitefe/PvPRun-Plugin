@@ -16,13 +16,13 @@ public abstract class Ability {
     public static void registerAbilities(){
         new LeapFeather();
         new ThrowTnt();
+        new ThrowCreeper();
     }
     public Ability(){
         abilities.add(this);
     }
     
     public abstract Component getName();
-    public abstract Material getBlock();
     public abstract ItemStack getItem();
     public abstract void execute(Player p);
     

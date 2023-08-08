@@ -11,7 +11,7 @@ public class FillUtil {
         for (double x = min.getX(); x<max.getX(); x++){
             for (double z = min.getZ(); z<max.getZ(); z++){
                 Block b = Bukkit.getWorlds().get(0).getBlockAt((int)x,(int)min.getY(),(int) z);
-                b.setType(Material.MOSS_BLOCK);
+                b.setType(type);
             }
         }
     }

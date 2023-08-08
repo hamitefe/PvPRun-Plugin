@@ -7,7 +7,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Iterator;
 
 public class AbilityListener implements Listener {
     @EventHandler
@@ -16,6 +15,7 @@ public class AbilityListener implements Listener {
         
         if (ability==null){return;}
         if (!evt.getAction().isRightClick()){return;}
+        evt.setCancelled(true);
         
         ability.execute(evt.getPlayer());
         final Inventory inv = evt.getPlayer().getInventory();

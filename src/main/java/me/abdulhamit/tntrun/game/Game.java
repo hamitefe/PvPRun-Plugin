@@ -2,6 +2,7 @@ package me.abdulhamit.tntrun.game;
 
 import me.abdulhamit.tntrun.TNTRun;
 import me.abdulhamit.tntrun.abilities.Ability;
+import me.abdulhamit.tntrun.stat.PlayerStat;
 import me.abdulhamit.tntrun.util.FillUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -19,37 +20,56 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Game {
+    
+    private static List<EntityType> protectedEntities = List.of(
+        EntityType.PLAYER,
+        EntityType.TEXT_DISPLAY,
+        EntityType.BLOCK_DISPLAY
+    );
     private static boolean isStarting = false;
+    private int currWidth = width;
+    private final GameEvent event;
     
     public static int tick = 0;
     public static int width = 20;
     private static boolean isRunning = false;
     private static Game current = null;
+    private Player beast;
     public static Game current(){
         return current;
     }
     
-    private Game(){current=this;}
+    private Game(){
+        current=this;
+        this.event = GameEvent.values()[new Random().nextInt(GameEvent.values().length)];
+        Bukkit.broadcastMessage("Selected event: "+event.getName());
+        Bukkit.broadcastMessage(event.getDescription());
+    }
     private List<Player> players = new ArrayList<>();
     
     public void start(){
         Vector locmin = new Vector(-width, 64, -width);
         Vector locmax = new Vector(width, 64, width);
+        FillUtil.fillIn(Material.MOSS_BLOCK, locmin, locmax);
         
-        FillUtil.fillIn(Material.AIR, locmin, locmax);
-        
-        Bukkit.getWorlds().get(0).getLivingEntities().forEach(entity ->{
-            if (!entity.getType().equals(EntityType.PLAYER)){
+        Bukkit.getWorlds().get(0).getEntities().forEach(entity ->{
+            if (!protectedEntities.contains(entity.getType())){
                 entity.remove();
             }
         });
         
-        players.addAll(Bukkit.getOnlinePlayers());
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            if (PlayerSettings.of(player).isParticipant())players.add(player);
+        });
+        
+        
+        
         players.forEach(player -> {
             player.teleport(
                 new Location(Bukkit.getWorlds().get(0),0, 65, 0)
             );
-            player.getInventory().clear();
+            player.setHealth(20);
+            player.getInventory().clear();  
         }
         );
         players.forEach(player -> {player.setGameMode(GameMode.ADVENTURE);});
@@ -64,25 +84,26 @@ public class Game {
             } else {
                 cancel();
             }
-        }}.runTaskTimer(TNTRun.getPlugin(TNTRun.class), 20*120L, 20*120L);
+        }}.runTaskTimer(TNTRun.getPlugin(TNTRun.class), 20*60L, 20*60L);
+        this.event.getStartEvent().accept(this);
     }
     public List<Player> getPlayers(){return players;}
     
-    public void stop(){
-        if (!this.players.isEmpty()){
-            this.players.forEach(this::killPlayer);
+    public void stop(boolean bool){
+        if (bool) {
+            if (!this.players.isEmpty()) {
+                this.players.forEach(this::killPlayer);
+            }
         }
         isRunning = false;
         current = null;
-        Vector locmin = new Vector(-width, 64, -width);
-        Vector locmax = new Vector(width, 64, width);
+        Vector locmin = new Vector(-currWidth, 64, -currWidth);
+        Vector locmax = new Vector(currWidth, 64, currWidth);
         
         FillUtil.fillIn(Material.AIR, locmin, locmax);
-        
-        
     }
     
-    public void tntRain(){
+    public void tntRain()   {
         final int randomCount = new Random().nextInt(10, 40);
         
         for (int i = 0; i<randomCount; i++) {
@@ -113,13 +134,23 @@ public class Game {
         }
         if (players.size()==1){
             Bukkit.broadcast(Component.text("Game ended "+getPlayers().get(0).getDisplayName()+" won the game!").color(NamedTextColor.GREEN));
-            stop();
+            getPlayers().get(0).setGameMode(GameMode.SPECTATOR);
+            PlayerStat.of(getPlayers().get(0)).win();
+            stop(false);
         } else if(players.isEmpty()) {
             Bukkit.broadcast(Component.text("Game ended no winners!").color(NamedTextColor.GREEN));
-            stop();
+            stop(false);
         } else {
             Bukkit.broadcast(Component.text(p.getDisplayName() + " is Eliminated! " + players.size() + " players left").color(NamedTextColor.RED));
         }
+    }
+    
+    public void setBeast(Player beast) {
+        this.beast = beast;
+    }
+    
+    public Player getBeast() {
+        return beast;
     }
     
     public static boolean isStarting(){return isStarting;}
@@ -134,7 +165,7 @@ public class Game {
         public void run(){
             if (second[0]==0){
                 if (Game.current()!=null){
-                    current.stop();
+                    current.stop(true);
                 }
                 new Game().start();
                 isStarting= false;

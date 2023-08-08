@@ -15,10 +15,6 @@ public class LeapFeather extends Ability{
         return Component.text("Leap Feather").color(NamedTextColor.GRAY);
     }
     
-    @Override
-    public Material getBlock() {
-        return Material.FEATHER;
-    }
     
     @Override
     public ItemStack getItem() {

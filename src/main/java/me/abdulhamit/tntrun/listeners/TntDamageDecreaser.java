@@ -9,13 +9,13 @@ public class TntDamageDecreaser implements Listener {
     @EventHandler
     public void onExplode(ExplosionPrimeEvent evt){
         evt.setFire(false);
-        evt.setRadius(3);
+        evt.setRadius(5);
     }
     
     @EventHandler
-    public void onExplode(EntityDamageEvent evt){
-        if (evt.getCause().equals(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION)||evt.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION)){
-            evt.setDamage(evt.getDamage()/2);
+    public void onExplodeDamage(EntityDamageEvent evt){
+        if (evt.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION)){
+            evt.setDamage(0);
         }
     }
 }

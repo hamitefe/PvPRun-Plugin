@@ -4,23 +4,32 @@ main: me.abdulhamit.tntrun.TNTRun
 api-version: '1.20'
 commands:
   startmanually:
-    permission: tntrun.start.manually
+    permission: tntrun.startmanually
     usage: /startmanually
     permission-message: §4You do not have permission to execute this command!
     description: starts the tnt run manually
     aliases: [startm]
+  toggleparticipant:
+    usage: /toggle participant
+    description: toggles participant mode
+    aliases: [toggp, togglep, tparticipant]
   width:
-    permission: §4You don't have the permission to execute this command!
+    permission: tntrun.setwidth
     usage: /width
-    permission-message: tntrun.setwidth
+    permission-message: §4You don't have the permission to execute this command!
     description: sets the width of the map!
     aliases: [setwidth]
-  discord:
-    usage: /discord
-    description: get the discord adress
-    aliases: [dc]
   tntrain:
     usage: /tntrain
     permission: tntrun.tntrain
-    permission-message: §4You dont have permission to execute this commands
+    permission-message: §4You dont have permission to execute this command!
     description: make tnt rain
+  stats:
+    usage: /stats player
+    description: get the stats of a player
+  reloadannouncements:
+    usage: /reloadannouncements
+    description: reloads announcements
+    aliases: ["reloada", "reloadann"]
+    permission: tntrun.reloadannouncements
+    permission-message: §4You do not have permission to use this command!
