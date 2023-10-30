@@ -21,10 +21,10 @@ public class Stat implements CommandExecutor, TabCompleter {
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         try {
             if (args.length == 0 && commandSender instanceof Player) {
-                commandSender.sendMessage(PlayerStat.stats.get(((Player) commandSender).getUniqueId()).toString());
-            } else {
+                commandSender.sendMessage(PlayerStat.of((Player) commandSender).toString());
+            } else if (args.length >= 1){
                 final UUID uid = Bukkit.getOfflinePlayer(args[0]).getUniqueId();
-                commandSender.sendMessage(PlayerStat.stats.get(uid).toString());
+                commandSender.sendMessage(PlayerStat.of(uid).toString());
             }
         } catch (Exception e){
             commandSender.sendMessage(Component.text("Error while getting stats of player: "+e.getMessage()).color(NamedTextColor.RED));

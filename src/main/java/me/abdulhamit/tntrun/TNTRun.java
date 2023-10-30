@@ -5,14 +5,21 @@ import me.abdulhamit.tntrun.command.*;
 import me.abdulhamit.tntrun.listeners.*;
 import me.abdulhamit.tntrun.stat.PlayerStat;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
 
 public final class TNTRun extends JavaPlugin {
+    public static TNTRun instance;
+    public File statFile(){
+        return new File(getDataFolder(), "stats.yml");
+    }
 
     @Override
     public void onEnable() {
+        instance = this;
         new StartTick().runTaskTimer(this, 0, 10);
         new AbilityTick().runTaskTimer(this, 0, 20);
         Bukkit.getPluginManager().registerEvents(new FallListener(), this);
@@ -31,14 +38,19 @@ public final class TNTRun extends JavaPlugin {
         getCommand("stats").setExecutor(new Stat());
         getCommand("stats").setTabCompleter(new Stat());
         getCommand("toggleparticipant").setExecutor(new ToggleParticipant());
-        
-        PlayerStat.readAll(new File(getDataFolder(), "stats.json"));
+        getCommand("setstat").setExecutor(new SetStat());
+        Bukkit.getLogger().info("enabling TNT RUN");
+        PlayerStat.readAll(statFile());
         
         //TODO: item to push nearby players
     }
 
     @Override
     public void onDisable() {
-        PlayerStat.saveAll(new File(getDataFolder(), "stats.json"));
+        try {
+            PlayerStat.saveAll(statFile());
+        }catch (Exception e) {
+            Bukkit.getLogger().info("error while saving statistics:" +e.getMessage());
+        }
     }
 }

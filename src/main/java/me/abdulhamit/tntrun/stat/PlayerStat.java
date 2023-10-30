@@ -3,9 +3,14 @@ package me.abdulhamit.tntrun.stat;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import me.abdulhamit.tntrun.TNTRun;
 import net.kyori.adventure.text.ComponentBuilder;
 import net.kyori.adventure.text.ComponentBuilderApplicable;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONObject;
 
@@ -13,7 +18,25 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class PlayerStat {
+public class PlayerStat implements ConfigurationSerializable {
+    @Override
+    public Map<String, Object> serialize(){
+        return Map.of(
+                "bobux", bobuxs,
+                "wins", wins,
+                "looses", looses,
+                "uuid",getUUID().toString()
+        );
+    }
+    
+    public static PlayerStat deserialize(Map<String, Object> map){
+        PlayerStat stat = PlayerStat.of(UUID.fromString((String) map.get("uuid")));
+        stat.bobuxs = (Integer) map.get("bobux");
+        stat.wins = (Integer) map.get("wins");
+        stat.looses = (Integer) map.get("looses");
+        return stat;
+    }
+    
     public static HashMap<UUID, PlayerStat> stats = new HashMap<>();
     
     private int wins = 0;
@@ -22,11 +45,15 @@ public class PlayerStat {
     private final UUID player;
     
     public static PlayerStat of(Player p){
-        if (!stats.containsKey(p.getUniqueId())){
-            stats.put(p.getUniqueId(), new PlayerStat(p));
+        return of (p.getUniqueId());
+    }
+    
+    public static PlayerStat of(UUID uid){
+        if (!stats.containsKey(uid)){
+            stats.put(uid, new PlayerStat(uid));
         }
         
-        return stats.get(p.getUniqueId());
+        return stats.get(uid);
     }
     
     public PlayerStat(Player p){
@@ -44,6 +71,8 @@ public class PlayerStat {
     public void setWins(int wins) {
         this.wins = wins;
     }
+    public void setLooses(int loose){this.looses = loose;}
+    public void loose(){this.looses += 1;}
     public int getWins() {
         return wins;
     }
@@ -60,30 +89,13 @@ public class PlayerStat {
         return bobuxs;
     }
     
-    public HashMap<String, Object> serialize(){
-        HashMap<String, Object> result = new HashMap<>();
-        result.put("bobux", this.bobuxs);
-        result.put("wins", this.wins);
-        result.put("uuid", this.player.toString());
-        return result;
-    }
-    
     public JsonObject toJsonObject(){
         JsonObject obj = new JsonObject();
         obj.addProperty("bobux", bobuxs);
         obj.addProperty("wins", wins);
+        obj.addProperty("looses", looses);
         obj.addProperty("uuid", this.player.toString());
         return  obj;
-    }
-    
-    public static PlayerStat deserialize(HashMap<String, Object> map){
-        int bobux =(int) map.get("bobux");
-        int wins = (int) map.get("wins");
-        UUID uid = UUID.fromString((String) map.get("uuid"));
-        PlayerStat stat = new PlayerStat(uid);
-        stat.setWins(wins);
-        stat.setBobuxs(bobux);
-        return stat;
     }
     
     public static PlayerStat deserializeJson(HashMap<String, JsonElement> map){
@@ -96,53 +108,54 @@ public class PlayerStat {
         return stat;
     }
     
-    public static void saveAll(File f){
+    public static void saveAll(File f) {
+
         try {
-            if (!f.exists()) {
-                f.mkdir();
-                f.createNewFile();
+            Bukkit.getLogger().info("statistics : "+ stats.size());
+            YamlConfiguration conf = new YamlConfiguration();
+            conf.load(TNTRun.instance.statFile());
+            int count = 0;
+            for (Map.Entry<UUID, PlayerStat> entry : PlayerStat.stats.entrySet()){
+                conf.set("stats."+entry.getKey().toString(), entry.getValue());
+                count++;
             }
+            Bukkit.getLogger().info("saved "+count+" statistics");
             
-            JsonObject obj = new JsonObject();
-            
-            stats.forEach((uuid, stat) -> {
-                obj.add(uuid.toString(), stat.toJsonObject());
-            });
-            
-            FileWriter writer = new FileWriter(f);
-            writer.write(obj.toString());
+            conf.save(TNTRun.instance.statFile());
         } catch (Exception e){
-            Bukkit.getLogger().info("error while trying to save player statistics! : "+e.getMessage());
+            Bukkit.getLogger().warning("error while trying to save player statistics! : "+e.getMessage());
         }
     }
     
     public static void readAll(File f) {
-        if (!f.exists()){
-            return;
-        }
+        if (!f.exists())return;
         try {
-            JsonElement el = JsonParser.parseReader(new FileReader(f));
-            if (!el.isJsonObject())return;
-            JsonObject object = el.getAsJsonObject();
-            object.entrySet().forEach(entry -> {
-                final UUID uid = UUID.fromString(entry.getKey());
-                final Map<String, JsonElement> map = entry.getValue().getAsJsonObject().asMap();
-                final PlayerStat stat = PlayerStat.deserializeJson(new HashMap<>(map));
-                stats.put(uid, stat);
-            });
+            YamlConfiguration conf = new YamlConfiguration();
+            conf.load(TNTRun.instance.statFile());
+            if (!conf.isConfigurationSection("stats"))return;
+            ConfigurationSection section = conf.getConfigurationSection("stats");
+            assert section != null : "Section is null :/";
+            int count = 0;
+            for (String key : section.getKeys(false)){
+                count++;
+                PlayerStat stat = (PlayerStat) section.get(key);
+                Bukkit.getLogger().info("readed: "+stat.toString());
+                stats.replace(stat.getUUID(), stat);
+            }
+            Bukkit.getLogger().info("readed "+count+" statistics");
         }
-        catch (FileNotFoundException ignored){
-            Bukkit.getLogger().info("Error when reading stats: file not found");
+        catch (Exception ex){
+            Bukkit.getLogger().info("Error while trying to read statistics :" +ex.getMessage());
         }
     }
     
     @Override
     public String toString(){
-        StringBuilder builder = new StringBuilder()
-            .append("player : "+Bukkit.getOfflinePlayer(this.player).getName())
-                .append("looses : "+this.looses+" \n")
+        return new StringBuilder()
+            .append("player : "+Bukkit.getOfflinePlayer(this.player).getName()+"\n")
+            .append("looses : "+this.looses+" \n")
             .append("bobux : "+this.bobuxs+"\n")
-            .append("wins : "+this.wins+"\n");
-        return builder.toString();
+            .append("wins : "+this.wins+"\n").toString();
+
     }
 }

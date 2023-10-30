@@ -33,3 +33,7 @@ commands:
     aliases: ["reloada", "reloadann"]
     permission: tntrun.reloadannouncements
     permission-message: §4You do not have permission to use this command!
+  setstat:
+    usage: /setstat <player> <statistic> <value>
+    permission: tntrun.setstat
+    permission-message: §4You do not have enough permission to use this command
